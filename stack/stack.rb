@@ -5,7 +5,7 @@ class StackOverflow < StandardError
 end
 
 class Stack
-  def initialize(size = 10)
+  def initialize(size = 30)
     @size = size
     @top = -1
     @data = []
@@ -39,8 +39,6 @@ class Stack
   def to_s
     @data.take(@top + 1)
   end
-
-  private
 
   def full?
     @top == (@size - 1)
