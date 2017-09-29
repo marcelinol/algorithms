@@ -53,6 +53,7 @@ class LinkedList
 
   def remove_from_position(index)
     raise 'empty list' if empty?
+    raise 'invalid position' if index > @size || index < 0
     return remove_first if index.zero?
     return remove_last if index == @size
 
