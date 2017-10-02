@@ -163,9 +163,21 @@ func (h *HashTable) Add(key string, value string) error {
 	return nil
 }
 
+func (h *HashTable) Search(key string) string {
+	index := hashFunction(key)
+
+	currNode := h.storage[index].first
+
+	for currNode.getKey() != key {
+		currNode = currNode.getNext()
+	}
+
+	return currNode.value
+}
+
 func hashFunction(key string) int {
 	value, _ := strconv.Atoi(key)
-	return value % 31
+	return value % 30
 }
 
 func main() {
@@ -178,11 +190,17 @@ func main() {
 	h.Add("20", "xunda")
 	// fmt.Println(h)
 
-	h.Add("50", "xunda2") // It should cause a collision with the "xunda" item
+	h.Add("50", "cinquentao") // It should cause a collision with the "xunda" item
 	// fmt.Println(h)
 
 	h.Add("20", "this should overwrite the item xunda")
 	fmt.Println(h)
+
+	vintao := h.Search("20")
+	fmt.Println(vintao)
+
+	cinquentao := h.Search("50")
+	fmt.Println(cinquentao)
 }
 
 // Questions
