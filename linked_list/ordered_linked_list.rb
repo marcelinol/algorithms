@@ -23,10 +23,6 @@ class OrderedLinkedList
     elsif value <= @head.data
       @head = Node.new(value, @head)
       @size += 1
-    # elsif @size.zero?
-    #   new_node = Node.new(value, nil)
-    #   @head.next_node = new_node
-    #   @size += 1
     else
       add_in_order(value)
     end
