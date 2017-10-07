@@ -1,119 +1,156 @@
 package main
 
-import (
-	"fmt"
-	"strconv"
-)
+import "fmt"
+import "errors"
 
 // Linked List
 
-type Node struct {
-	item     interface{}
-	nextNode *Node
-}
-
-type LinkedList struct {
-	head   *Node
-	length int
-}
-
-func NewLinkedList() *LinkedList {
-	node := Node{nil, nil}
-
-	return &LinkedList{&node, 0}
-}
-
-func (l *LinkedList) AddFirst(item interface{}) {
-	newNode := Node{item, l.head}
-	l.head = &newNode
-	l.length++
-}
-
-func (l *LinkedList) include(item interface{}) bool {
-	currentNode := l.head
-	for currentNode.nextNode != nil {
-		if currentNode.item == item {
-			return true
-		}
-		currentNode = currentNode.nextNode
-	}
-
-	return false
+type HashTableItem struct {
+	key string
+	value string
+	next *HashTableItem
 }
 
 // HashTable
 
-const hashSize int = 30
-
-type HashItem struct {
-	key   string
-	value string
-}
+const hashTableSize int = 30
 
 type HashTable struct {
-	length  int
-	storage [hashSize]LinkedList
+	storage []interface{}
 }
 
 func NewHashTable() *HashTable {
-	return &HashTable{0, [hashSize]LinkedList{}}
+	return &HashTable{make([]interface{}, hashTableSize)}
+}
+
+func (h *HashTable) getHashTableItem(key string) (*HashTableItem) {
+	index := GetHashTableItemIndex(key)
+
+	if h.storage[index] == nil {
+		return nil
+	}
+
+	item := h.storage[index].(*HashTableItem)
+
+	for {
+		if item.key == key {
+			return item
+		}
+
+		if item.next == nil {
+			return nil
+		}
+
+		item = item.next
+	}
 }
 
 func (h *HashTable) Add(key string, value string) {
-	index := hashFunction(key)
+	item := h.getHashTableItem(key)
+	newItem := HashTableItem{key, value, nil}
 
-	fmt.Printf("Adding value " + value + " to index ")
-	fmt.Println(index)
-	fmt.Println(h.storage[index])
-
-	newItem := HashItem{key, value}
-
-	h.storage[index].AddFirst(newItem)
-	h.length++
-}
-
-func (h *HashTable) Search(key string) string {
-	index := hashFunction(key)
-
-	currentNode := h.storage[index].head
-
-	for currentNode.nextNode != nil {
-		if currentNode.item.key == key {
-			return currentNode.item.value
-		}
-		currentNode = currentNode.nextNode
+	if item != nil {
+		item.value = newItem.value
+		return
 	}
 
-	item := currentNode.item
-	return item.value
+	index := GetHashTableItemIndex(key)
+
+	if h.storage[index] == nil {
+		h.storage[index] = &newItem
+		return
+	}
+
+	newItem.next = h.storage[index].(*HashTableItem)
+	h.storage[index] = &newItem
+	return
+}
+
+func GetHashTableItemIndex(key string) int {
+	hashCode := hashFunction(key)
+	index := hashCode % hashTableSize
+	return index
+}
+
+func (h *HashTable) Remove(key string) {
+	index := GetHashTableItemIndex(key)
+
+	if h.storage[index] == nil {
+		return
+	}
+
+	item := h.storage[index].(*HashTableItem)
+
+	if item.key == key {
+		h.storage[index] = item.next
+		return
+	}
+
+	previous := item
+	item = item.next
+
+	for {
+		if item.key == key {
+			previous.next = item.next
+			return
+		}
+
+		previous = item
+		item = item.next
+	}
+	return
+}
+
+func (h *HashTable) getValue(key string) (string, error) {
+	item := h.getHashTableItem(key)
+
+	if item == nil {
+		return "", errors.New("ERROR: key not found")
+	}
+
+	return item.value, nil
 }
 
 func hashFunction(key string) int {
-	value, _ := strconv.Atoi(key)
-	return value % 30
+	value := []rune(key)
+	return int(value[0])
 }
 
 func main() {
 	h := NewHashTable()
-	// fmt.Println(h)
-
-	h.Add("1", "first value")
-	// fmt.Println(h)
-
-	h.Add("20", "xunda")
-	// fmt.Println(h)
-
-	h.Add("50", "cinquentao") // It should cause a collision with the "xunda" item
-	// fmt.Println(h)
-
-	h.Add("20", "this should overwrite the item xunda")
 	fmt.Println(h)
 
-	vintao := h.Search("20")
-	fmt.Println(vintao)
+	fmt.Println("\n--------------------- TESTING ADDITION ----------------------\n")
 
-	cinquentao := h.Search("50")
-	fmt.Println(cinquentao)
+	h.Add("luciano", "atlas")
+
+	item := h.getHashTableItem("luciano")
+	fmt.Println(item)
+
+	h.Add("wagner", "gorillaz")
+
+	h.Add("hugo", "jarvis")
+
+	h.Add("luciano", "this should overwrite the item luciano")
+	fmt.Println(h.getHashTableItem("luciano"))
+
+	h.Add("wluciano", "this should concatenate wagner")
+	h.Add("lucas", "vikings")
+	h.Add("loao barbosa", "jarvis")
+
+
+	item = h.getHashTableItem("wluciano")
+	fmt.Println(item)
+	otherItem := item.next
+
+	fmt.Println(otherItem)
+
+	fmt.Println("\n--------------------- TESTING REMOVE ----------------------\n")
+	fmt.Println(h.getValue("lucas"))
+	fmt.Println("removing lucas\n")
+	h.Remove("lucas")
+	fmt.Println(h.getValue("lucas"))
+
 }
 
 // Questions
