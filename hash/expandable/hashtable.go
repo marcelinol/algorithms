@@ -187,9 +187,9 @@ func main() {
 	fmt.Println(h.getHashTableItem("luciano"))
 	fmt.Println(h.getHashTableItem("wagner"))
 	fmt.Println(h.getHashTableItem("hugo"))
-	fmt.Println(h.getHashTableItem("wluciano"))
+	fmt.Println(h.getHashTableItem("wagner"))
 
-	item = h.getHashTableItem("wluciano")
+	item = h.getHashTableItem("wagner")
 	fmt.Println(item)
 	otherItem := item.next
 
