@@ -138,12 +138,12 @@ func (s *SpellChecker) AddWords(words []string) {
 	}
 }
 
-func (s *SpellChecker) CheckPhrase(sentence string) []string {
-	words := strings.Split(sentence, " ")
+func (s *SpellChecker) CheckPhrase(sentence string) []string { //O(m+n) -> O(n)
+	words := strings.Split(sentence, " ") // O(n)
 	wrongWords := make([]string, 0)
 	i := 0
-	for i < len(words) {
-		if !(s.words.hasKey(words[i])) {
+	for i < len(words) { // O(m)
+		if !(s.words.hasKey(words[i])) { // O(1)
 			wrongWords = append(wrongWords, words[i])
 		}
 		i++

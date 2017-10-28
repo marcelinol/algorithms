@@ -12,8 +12,8 @@ type HashTableItem struct {
 }
 
 type HashTableStorage struct {
-	items []interface{}
-	size  int
+	item *HashTableItem
+	size int
 }
 
 // HashTable
@@ -22,40 +22,18 @@ const hashTableSize int = 2
 const limitHashTableLength int = 2
 
 type HashTable struct {
-	storage []interface{}
+	storage []HashTableStorage
 	length  int
 }
 
 func NewHashTable() *HashTable {
-	return &HashTable{make([]interface{}, hashTableSize), 0}
-}
-
-func (h *HashTable) getHashTableItem(key string) *HashTableItem {
-	index := h.GetHashTableItemIndex(key)
-
-	if h.storage[index] == nil {
-		return nil
-	}
-
-	item := h.storage[index].(*HashTableItem)
-
-	for {
-		if item.key == key {
-			return item
-		}
-
-		if item.next == nil {
-			return nil
-		}
-
-		item = item.next
-	}
+	return &HashTable{make([]HashTableStorage, hashTableSize), 0}
 }
 
 func resizeHashTable(h *HashTable) *HashTable {
 	fmt.Println("resizing hash")
 	newSize := len(h.storage) * 2
-	newHashTable := HashTable{make([]interface{}, newSize), 0}
+	newHashTable := HashTable{make([]HashTableStorage, newSize), 0}
 	fmt.Println(newHashTable)
 
 	i := 0
@@ -64,8 +42,8 @@ func resizeHashTable(h *HashTable) *HashTable {
 			break
 		}
 
-		if h.storage[i] != nil {
-			item := h.storage[i].(*HashTableItem)
+		if h.storage[i].item != nil {
+			item := h.storage[i].item
 			for {
 				newHashTable.Add(item.key, item.value)
 
@@ -84,86 +62,52 @@ func resizeHashTable(h *HashTable) *HashTable {
 	return &newHashTable
 }
 
-func (h *HashTable) newGetHashTableItem(key string) *HashTableItem {
+func (h *HashTable) GetHashTableItem(key string) *HashTableItem {
 	index := h.GetHashTableItemIndex(key)
 
-	if h.storage[index] == nil {
-		return nil
-	}
-
-	if h.storage[index].(int) == 0 {
+	if h.storage[index].size == 0 {
 		return nil
 	}
 
 	s := h.storage[index]
-	item := s.(*HashTableItem)
 
 	for {
-		if item.key == key {
-			return item
+		if s.item.key == key {
+			return s.item
 		}
 
-		if item.next == nil {
+		if s.item.next == nil {
 			return nil
 		}
 
-		item = item.next
+		s.item = s.item.next
 	}
-}
-
-func (h *HashTable) NewAdd(key string, value string) {
-	item := h.newGetHashTableItem(key)
-	newItem := HashTableItem{key, value, nil}
-
-	if item != nil {
-		item.value = newItem.value
-		return
-	}
-
-	index := h.GetHashTableItemIndex(key)
-
-	if h.storage[index] == nil {
-		s := HashTableStorage{make([]interface{}, 0), 0}
-		h.storage[index] = s
-		s.items = &newItem
-		h.length++
-		return
-	}
-
-	if h.storage[index] == nil {
-
-	}
-
-	newItem.next = h.storage[index].(*HashTableItem)
-	h.storage[index] = &newItem
-	h.length++
-	return
 }
 
 func (h *HashTable) Add(key string, value string) {
-	item := h.getHashTableItem(key)
-	newItem := HashTableItem{key, value, nil}
+	item := h.GetHashTableItem(key)
+	newItem := &HashTableItem{key, value, nil}
 
 	if item != nil {
 		item.value = newItem.value
 		return
 	}
 
-	if h.length > (limitHashTableLength * len(h.storage)) {
-		*h = *resizeHashTable(h)
-	}
-
 	index := h.GetHashTableItemIndex(key)
 
-	if h.storage[index] == nil {
-		h.storage[index] = &newItem
-		h.length++
+	if h.storage[index].size == 0 {
+		s := HashTableStorage{newItem, 1}
+		h.storage[index] = s
 		return
 	}
 
-	newItem.next = h.storage[index].(*HashTableItem)
-	h.storage[index] = &newItem
-	h.length++
+	if h.storage[index].size > limitHashTableLength {
+		h = resizeHashTable(h)
+	}
+
+	newItem.next = h.storage[index].item
+	h.storage[index].item = newItem
+	h.storage[index].size++
 	return
 }
 
@@ -176,14 +120,15 @@ func (h *HashTable) GetHashTableItemIndex(key string) int {
 func (h *HashTable) Remove(key string) {
 	index := h.GetHashTableItemIndex(key)
 
-	if h.storage[index] == nil {
+	if h.storage[index].item == nil {
 		return
 	}
 
-	item := h.storage[index].(*HashTableItem)
+	item := h.storage[index].item
+	h.storage[index].size--
 
 	if item.key == key {
-		h.storage[index] = item.next
+		h.storage[index].item = item.next
 		return
 	}
 
@@ -202,7 +147,7 @@ func (h *HashTable) Remove(key string) {
 }
 
 func (h *HashTable) getValue(key string) (string, error) {
-	item := h.getHashTableItem(key)
+	item := h.GetHashTableItem(key)
 
 	if item == nil {
 		return "", errors.New("ERROR: key not found")
@@ -225,7 +170,7 @@ func main() {
 
 	h.Add("luciano", "atlas")
 
-	item := h.getHashTableItem("luciano")
+	item := h.GetHashTableItem("luciano")
 	fmt.Println(item)
 
 	h.Add("wagner", "gorillaz")
@@ -233,7 +178,7 @@ func main() {
 	h.Add("hugo", "jarvis")
 
 	h.Add("luciano", "this should overwrite the item luciano")
-	fmt.Println(h.getHashTableItem("luciano"))
+	fmt.Println(h.GetHashTableItem("luciano"))
 
 	h.Add("wluciano", "this should concatenate wagner")
 	h.Add("lucas", "vikings")
@@ -245,12 +190,12 @@ func main() {
 
 	fmt.Print("new hash: ")
 	fmt.Println(h)
-	fmt.Println(h.getHashTableItem("luciano"))
-	fmt.Println(h.getHashTableItem("wagner"))
-	fmt.Println(h.getHashTableItem("hugo"))
-	fmt.Println(h.getHashTableItem("wagner"))
+	fmt.Println(h.GetHashTableItem("luciano"))
+	fmt.Println(h.GetHashTableItem("wagner"))
+	fmt.Println(h.GetHashTableItem("hugo"))
+	fmt.Println(h.GetHashTableItem("wagner"))
 
-	item = h.getHashTableItem("wagner")
+	item = h.GetHashTableItem("wagner")
 	fmt.Println(item)
 	otherItem := item.next
 
