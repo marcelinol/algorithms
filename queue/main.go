@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 type Queue struct {
@@ -66,39 +65,4 @@ func (q *Queue) resize() {
 	return
 }
 
-func main() {
-	q := NewQueue()
-
-	// // Checking peek error when queue is empty
-	// _, err := q.Peek()
-	// fmt.Println(err)
-	//
-	// // Setup
-	// _ = q.Add("first")
-	// _ = q.Add("second")
-	//
-	// // Testing Peek
-	// peek, _ := q.Peek()
-	// fmt.Println(peek)
-	//
-	// // Testing Remove
-	// removed, _ := q.Remove()
-	// fmt.Println(removed)
-	//
-	// removed, _ = q.Remove()
-	// fmt.Println(removed)
-	//
-	// _, err = q.Remove()
-	// fmt.Println(err)
-
-	// Lets NOT break this shit
-	for n := 0; n <= 5000; n++ {
-		el := fmt.Sprintf("element %v", n)
-		err := q.Add(el)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("added " + el)
-		}
-	}
-}
+func main() {}
