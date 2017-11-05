@@ -31,7 +31,7 @@ func (q *Queue) Peek() (string, error) {
 
 func (q *Queue) Add(s string) error {
 	if q.rear == len(q.storage) {
-		return errors.New("Queue has reached its limit")
+		q.resize()
 	}
 
 	q.storage[q.rear] = s
@@ -51,6 +51,19 @@ func (q *Queue) Remove() (string, error) {
 	q.front++
 
 	return el, nil
+}
+
+func (q *Queue) resize() {
+	copy := q.storage
+	q.storage = make([]string, len(q.storage)*2)
+	q.rear = 0
+	q.front = 0
+
+	for i := 0; i < len(copy); i++ {
+		q.Add(copy[i])
+	}
+
+	return
 }
 
 func main() {
@@ -78,8 +91,8 @@ func main() {
 	// _, err = q.Remove()
 	// fmt.Println(err)
 
-	// Lets break this shit
-	for n := 0; n <= 5; n++ {
+	// Lets NOT break this shit
+	for n := 0; n <= 5000; n++ {
 		el := fmt.Sprintf("element %v", n)
 		err := q.Add(el)
 		if err != nil {
